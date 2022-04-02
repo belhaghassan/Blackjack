@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # Bilal El-haghassan
 # CPSC 386-04
-# 2022-02-28
+# 2022-04-04
 # bilalelhaghassan@csu.fullerton.edu
 # @belhaghassan
 #
-# Lab 00-02
+# Lab 03-01
 #
-# This is PigGame, a game of DICE and Chance
+# This is BlackJackGame, a game of Cards and money
 #
 
-"""Pig Game initialization"""
+"""BlackJack game initialization"""
 
 __all__ = ["cards", "game", "player"]
