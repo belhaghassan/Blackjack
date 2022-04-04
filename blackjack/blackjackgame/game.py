@@ -14,7 +14,6 @@
 
 import time
 import pickle
-import random
 import os
 from blackjackgame import cards
 from blackjackgame import player as Player
@@ -54,86 +53,76 @@ class BlackJackGame:
         print(
             f"\tCurrent Score: {self._dealer.score}\n"
         )
-        
+
         self.hand(player)
         time.sleep(1)
-        print(
-            f"\tCurrent Score: {player.score}\n"
-            f"\tCurrent Wager: $"
-            f"{self._players[player]['wager1']}"
+
+    def card_template(self, rank, suit):
+        """Card graphic template"""
+        if rank == 10:
+            return (
+                "\t ___________\n"
+                f'\t|{rank}{suit}        |\n'
+                '\t|           |\n'
+                '\t|           |\n'
+                f'\t|     {suit}     |\n'
+                '\t|           |\n'
+                '\t|           |\n'
+                f'\t|        {suit}{rank}|\n'
+                '\t|___________|\n\n'
+            )
+        return (
+            "\t __________\n"
+            f'\t|{rank}{suit}        |\n'
+            '\t|          |\n'
+            '\t|          |\n'
+            f'\t|    {suit}     |\n'
+            '\t|          |\n'
+            '\t|          |\n'
+            f'\t|        {suit}{rank}|\n'
+            '\t|__________|\n\n'
         )
-        time.sleep(1)
 
     def hand(self, player):
         """Graphical representation of player hand"""
 
         suits = {'Clubs': '♣', 'Hearts': '♥', 'Spades': '♠','Diamonds': '♦'}
         rank = {'Jack': 'J', 'Queen': 'Q', 'King': 'K', 'Ace': 'A'}
-    
+
         time.sleep(1)
         cards = []
+
         if player.is_split:
+            print(f"\n\t{player.name}'s Hand:")
             for idx, hand in enumerate(player.cards()):
-                cards.append(f"Hand{idx}\n\n")
+                print(f"\tHand {idx + 1}\n")
                 for card in hand:
                     if card.rank in rank:
-                        r = rank[card.rank]
+                        rnk = rank[card.rank]
                     else:
-                        r = card.rank
-                    s = suits[card.suit]
-                    if player.name == 'Dealer' \
-                        and player.cards()[1] == card \
-                            and player.hidden:
-                        template = (
-                        "\t ___________\n"
-                        '\t|           |\n'
-                        '\t|     _     |\n'
-                        '\t|   /   \   |\n'
-                        '\t|       /   |\n'
-                        '\t|     |     |\n'
-                        '\t|     .     |\n'
-                        '\t|           |\n'
-                        '\t|___________|\n\n'
-                        ) 
-                    else:
-                        if r == '10':
-                            template = (
-                            "\t ___________\n"
-                            f'\t|{r}{s}        |\n'
-                            '\t|           |\n'
-                            '\t|           |\n'
-                            f'\t|     {s}     |\n'
-                            '\t|           |\n'
-                            '\t|           |\n'
-                            f'\t|        {r}{s}|\n'
-                            '\t|___________|\n\n'
-                            ) 
-                        else:
-                            template = (
-                                "\t __________\n"
-                                f'\t|{r}{s}        |\n'
-                                '\t|          |\n'
-                                '\t|          |\n'
-                                f'\t|    {s}     |\n'
-                                '\t|          |\n'
-                                '\t|          |\n'
-                                f'\t|        {s}{r}|\n'
-                                '\t|__________|\n\n'
-                            )
-                        cards.append(template)
-                card_list = [i for i in range(len(cards))]
+                        rnk = card.rank
+                    suit = suits[card.suit]
+                    cards.append(self.card_template(rnk,suit))
+                card_list = list(range(len(cards)))
                 lines = [cards[i].splitlines() for i in card_list]
-                print(f"\n\t{player.name}'s Hand:")
-                for l in zip(*lines):
-                    print(*l, sep='')
-                # cards.clear() 
+                for lis in zip(*lines):
+                    print(*lis, sep='')
+                print(
+                    f"\tCurrent Score: {player.score}\n"
+                    f"\tCurrent Wager: $"
+                    f"{self._players[player][f'wager{idx + 1}']}"
+                )
+                time.sleep(1)
+                cards.clear()
+                print(self.line)
         else:
+            print(f"\n\t{player.name}'s Hand:")
             for card in player.cards():
                 if card.rank in rank:
-                    r = rank[card.rank]
+                    rnk = rank[card.rank]
                 else:
-                    r = card.rank
-                s = suits[card.suit]
+                    rnk = card.rank
+                suit = suits[card.suit]
                 if player.name == 'Dealer' \
                     and player.cards()[1] == card \
                         and player.hidden:
@@ -141,50 +130,29 @@ class BlackJackGame:
                     "\t ___________\n"
                     '\t|           |\n'
                     '\t|     _     |\n'
-                    '\t|   /   \   |\n'
+                    '\t|   /   \\   |\n'
                     '\t|       /   |\n'
                     '\t|     |     |\n'
                     '\t|     .     |\n'
                     '\t|           |\n'
                     '\t|___________|\n\n'
-                    ) 
+                    )
                 else:
-                    if r == '10':
-                        template = (
-                        "\t ___________\n"
-                        f'\t|{r}{s}        |\n'
-                        '\t|           |\n'
-                        '\t|           |\n'
-                        f'\t|     {s}     |\n'
-                        '\t|           |\n'
-                        '\t|           |\n'
-                        f'\t|        {r}{s}|\n'
-                        '\t|___________|\n\n'
-                        ) 
-                    else:
-                        template = (
-                            "\t __________\n"
-                            f'\t|{r}{s}        |\n'
-                            '\t|          |\n'
-                            '\t|          |\n'
-                            f'\t|    {s}     |\n'
-                            '\t|          |\n'
-                            '\t|          |\n'
-                            f'\t|        {s}{r}|\n'
-                            '\t|__________|\n\n'
-                        )
+                    template = self.card_template(rnk,suit) 
                 cards.append(template)
-            card_list = [i for i in range(len(cards))]
+            card_list = list(range(len(cards)))
             lines = [cards[i].splitlines() for i in card_list]
+            for lis in zip(*lines):
+                print(*lis, sep='')
+            print(
+                f"\tCurrent Score: {player.score}\n"
+                f"\tCurrent Wager: $"
+                f"{self._players[player][f'wager1']}"
+            )
+            print(self.line)
 
-            print(f"\n\t{player.name}'s Hand:")
-            for l in zip(*lines):
-                print(*l, sep='')
-        
         time.sleep(1)
-        return
 
-    
     def player_input(self, num_of_players):
         """Take in and save player names"""
 
@@ -218,7 +186,9 @@ class BlackJackGame:
         """Check if player beat dealer"""
         players_dict = self._players
         if hand < 22:
-            if self._dealer.score > 22 or hand > self._dealer.score:
+            if self._dealer.score == 21 and hand == 21:
+                print("\n\tDraw - Non winnings or losses.\n")            
+            elif self._dealer.score > 22 or hand > self._dealer.score:
                 print(
                     "\t\t\t\t******WINNER******\n"
                     f"\t{player.name} wins ${players_dict[player][wager]} wager\n"
@@ -228,17 +198,19 @@ class BlackJackGame:
                 print(
                     f"\tNew Balance with winnings:"
                     f" {player.get_balance}"
+                    f"{self.line}\n"
                     )
             else:
                 print(
                     f"\t{player.name} loses ${players_dict[player][wager]} wager\n"
                     f"\tStarting Balance: {player.get_balance}"
+                    f"{self.line}\n"
                 )
                 player.lose(players_dict[player][wager])
                 print(
                     f"\tNew Balance after losing: "
                     f"{player.get_balance}"
-                    f"{self.line}\n\n"
+                    f"{self.line}\n"
                 )
         else:
             print(f"\t{player.name} loses ${players_dict[player][wager]} wager\n")
@@ -246,6 +218,12 @@ class BlackJackGame:
             player.lose(players_dict[player][wager])
             print(f"\tNew Balance after losing: {player.get_balance}\n\n")
             print(self.line)
+
+        if 'insurance' in players_dict[player] and self._dealer.score == 21:
+            print(
+                "\t\t\t\t******WINNER******\n"
+                f"{player} wins insurance wager of {players_dict[player]['insurance']}"
+            )
 
 
     def run(self):
@@ -261,7 +239,7 @@ class BlackJackGame:
         |         ___   __            __       __            __          |
         |        / _ ) / /___ _ ____ / /__ __ / /___ _ ____ / /__        |
         |       / _  |/ // _ `// __//  '_// // // _ `// __//  '_/        |
-        |      /____//_/ \_,_/ \__//_/\_\ \___/ \_,_/ \__//_/\_\\         |  
+        |      /____//_/ \\_,_/ \\__//_/\\_\\ \\___/ \\_,_/ \\__//_/\\_\\         |  
         |                                                                |
         |                                                                |
         |                         ____ ___________                       |
@@ -294,14 +272,14 @@ class BlackJackGame:
         dealer = self._dealer
 
         # self.to_file('players.pkl', players_dict)
-        
+
         while self._game_is_not_over:
             if os.path.exists('players.pkl'):
                 self._players = self.from_file('players.pkl')
-                
+
             players_dict = self._players
             # Players asked to place bet
-            for plyr in players_dict:     
+            for plyr in players_dict:
                 players_dict[plyr] = {'wager1': plyr.place_bet()}
 
             # Deal to two cards to each player
@@ -310,23 +288,22 @@ class BlackJackGame:
                     if players_dict[plyr]['wager1'] > 0:
                         plyr.add_card(dealer.deal)
                 dealer.add_card(dealer.deal)
-            
+
             print(self.line)
-            
             # Player's opportunity to split, double down or buy insurance
             for players in players_dict:
                 self.new_hand(players)
-                if cards.card_value(dealer.cards()[0]) == 10:
+                if cards.card_value(dealer.cards()[0]) == 10 or dealer.cards()[0].rank == "Ace":
                     insurance = input("\tWould you like to buy insurance? ('yes' or 'no') \n\t")
                     if insurance == ('y' or 'yes'):
                         players_dict[players]['insurance']\
-                            = plyr.place_bet()
+                            = players.place_bet()
 
-                # Check if player can split                 
+                # Check if player can split
                 # if players.cards()[0].rank == players.cards()[1].rank and\
                 if (players_dict[players]['wager1'] * 2) < players.get_balance:
                     split = input("\tWould you like to split? \n\t")
-                    if split == 'y' or 'yes':
+                    if split == ('y' or 'yes'):
                         players.split()
                         players.add_card(dealer.deal, 0)
                         players.add_card(dealer.deal, 1)
@@ -338,14 +315,14 @@ class BlackJackGame:
                     self.double_down(players)
 
                 if players.is_split:
-                    if players._double_down and players._double_down2:
+                    if players.double_down and players.double_down2:
                         self.hit_or_stay(players, 0)
                         self.hit_or_stay(players, 1)
-                    elif players._double_down:
+                    elif players.double_down:
                         self.hit_or_stay(players, 1)
-                    elif players._double_down2:
+                    elif players.double_down2:
                         self.hit_or_stay(players, 0)
-                elif players._double_down == False:
+                elif players.double_down is False:
                     self.hit_or_stay(players, 0)
             # Dealers move
             dealer.show
@@ -361,7 +338,7 @@ class BlackJackGame:
                 self.hand(dealer)
             if dealer.score > 21:
                 print("\tDealer Busts!")
-            
+
             # Check which players win
             for player in players_dict:
                 print(self.line)
@@ -374,25 +351,23 @@ class BlackJackGame:
                     self.check_winners(player, player.score, 'wager1')
                 player.reset
             dealer.reset
+            dealer.hide
 
             self.to_file('players.pkl', players_dict)
 
             print(self.line)
 
-            for _ in players_dict:
-                print(_)
-
             if input(
                 f"\n\tPlayer {list(players_dict)[0].name} would you like to "
                 "play again? \n\t['y' or 'yes' or 'n' or 'no']\n\t"
             ) == ('y' or'yes'):
-                 print("\n\tAnother one!\n")
+                print("\n\tAnother one!\n")
             else:
                 self._game_is_not_over = False
                 print("\n\tGameOver")
-               
 
     def double_down(self, players):
+        """Function to double down on a players wager"""
         players_dict = self._players
 
         double_down = input("\tWould you like to double down? ('yes' or 'no')\n\t")
@@ -414,43 +389,37 @@ class BlackJackGame:
                         "\n\t"
                         )
                 if choice == 'both' and players_dict[players]['wager1'] * 4 < players.get_balance:
+                    print(f"\n\t{players} will double down on both hands!\n")
                     players.add_card(self._dealer.deal)
                     players.add_card(self._dealer.deal, 1)
-                    players._double_down = True
-                    players._double_down2 = True
+                    players.double_down = True
+                    players.double_down2 = True
                     players_dict[players]['wager1'] = players_dict[players]['wager1'] * 2
-                    players_dict[players]['wager2'] = players_dict[players]['wager1'] * 2
+                    players_dict[players]['wager2'] = players_dict[players]['wager1']
                 elif choice == "2":
+                    print(f"\n\t{players} will double down on 2nd hand!\n")
                     players.add_card(self._dealer.deal, 1)
-                    players._double_down2 = True 
+                    players.double_down2 = True 
                     players_dict[players]['wager2']\
                         = players_dict[players]['wager1'] * 2
                 else:
+                    print(f"\n\t{players} will double down on 1st hand!\n")
                     players.add_card(self._dealer.deal)
-                    players._double_down = True
+                    players.double_down = True
                     players_dict[players]['wager1']\
                         = players_dict[players]['wager1'] * 2
             else:
-                players._double_down = True
+                players.double_down = True
                 players_dict[players]['wager1']\
                     = players_dict[players]['wager1'] * 2
-            print(
-                f"\n\t{players.name} doubled down!\n"
-                f"\tNew Wager: ${players_dict[players]['wager1']}\n"
-            )
-            if 'wager2' in players_dict[players]:
-                print(
-                    f"\tWager2: ${players_dict[players]['wager2']}\n"
-                )
+
         
-            if players.is_split and (players._double_down or players._double_down2) \
-                == False:
-                hand = 0 if players._double_down else 1
-                print("double down errr")
-                if players._double_down2:
+            if players.is_split and players.double_down is False or players.double_down2 is False:
+                hand = 0 if players.double_down else 1
+                if players.double_down2:
                     while players.hit_or_stand():
                         print(self.line)
-                        players.add_card(self._dealer.deal, 0)
+                        players.add_card(self._dealer.deal, hand)
                         self.new_hand(players)
                         if players.score > 21:
                             print(f"\t{players.name} busts and loses"

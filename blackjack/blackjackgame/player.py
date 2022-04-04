@@ -13,8 +13,10 @@
 """This is a game of BlackJackGame with 1 - 4 players"""
 
 import time
-from blackjackgame import cards
 import random
+from blackjackgame import cards
+
+
 
 class Player:
     """Human player class"""
@@ -43,6 +45,22 @@ class Player:
         self._split = False
 
     @property
+    def double_down(self):
+        return self._double_down
+    
+    @property
+    def double_down2(self):
+        return self._double_down2
+    
+    @double_down.setter
+    def double_down(self, true_or_false):
+        self._double_down = true_or_false
+    
+    @double_down2.setter
+    def double_down2(self, true_or_false):
+        self._double_down2 = true_or_false
+
+    @property
     def name(self):
         """Return the player's name"""
         return self._name
@@ -51,7 +69,7 @@ class Player:
     def score(self):
         """Return the player's score."""
         return self._score
-    
+
     @property
     def score2(self):
         """Return the player's 2nd hand score."""
@@ -70,13 +88,13 @@ class Player:
     def check_ace(self, hand, score):
         """Check and change value of Ace"""
         for card in hand:
-            if score == 'score0':
-                if card.rank == 'Ace' and self.score > 22:
+            if score == "score0":
+                if card.rank == "Ace" and self.score > 22:
                     self._score = self._score - 10
             else:
-                if card.rank == 'Ace' and self.score2 > 22:
+                if card.rank == "Ace" and self.score2 > 22:
                     self._score2 = self._score2 - 10
-                
+
     def win(self, wager):
         """Add to balance"""
         self._balance += wager
@@ -94,10 +112,10 @@ class Player:
 
     def add_score(self):
         """Add up the player's score."""
-        if self.is_split == False:
+        if self.is_split is False:
             score = 0
             for card in self.cards():
-                if card.rank == 'Ace':
+                if card.rank == "Ace":
                     score += 11
                 else:
                     score += cards.card_value(card)
@@ -106,32 +124,29 @@ class Player:
             score0 = 0
             score2 = 0
             for card in self.cards()[0]:
-                if card.rank == 'Ace':
+                if card.rank == "Ace":
                     score0 += 11
                 else:
                     score0 += cards.card_value(card)
             for card in self.cards()[1]:
-                if card.rank == 'Ace':
+                if card.rank == "Ace":
                     score2 += 11
                 else:
                     score2 += cards.card_value(card)
-            self._score =score0
-            self._score2 =score2
-            self.check_ace(self.cards()[0], 'score0')
-            self.check_ace(self.cards()[1], 'score2')
-
+            self._score = score0
+            self._score2 = score2
+            self.check_ace(self.cards()[0], "score0")
+            self.check_ace(self.cards()[1], "score2")
 
     def place_bet(self):
         """Place a players wager"""
         if self.get_balance < 1:
             self._balance = 10000
-        wage = \
-            int(input(f"\tPlayer {self.name}. How much do you wager? "))
+        wage = int(input(f"\tPlayer {self.name}. How much do you wager? "))
         tries = 3
         while wage > self.get_balance and wage < 0 and tries > 0:
             print("\tInvalid wager entered, try again.")
-            wage = \
-                int(input(f"\tPlayer {self.name}. How much do you wager? "))
+            wage = int(input(f"\tPlayer {self.name}. How much do you wager? "))
             tries -= 1
         return wage if tries > 0 else 0
 
@@ -141,14 +156,15 @@ class Player:
 
     def split(self):
         """Splits a players hand into two hands"""
-        self._cards = [[self._cards[0]],[self._cards[1]]]
+        self._cards = [[self._cards[0]], [self._cards[1]]]
         self._score = 0
         self._split = True
 
     def hit_or_stand(self):
         """Hit or stand methed"""
         time.sleep(0.5)
-        print(f"\n\tWould {self.name} like to Hit or stand? \n"
+        print(
+            f"\n\tWould {self.name} like to Hit or stand? \n"
             "\t(Type 'hit' or 'h' to hit, or just",
             "ENTER anykey to stand)\n\t",
         )
@@ -164,8 +180,8 @@ class Player:
     def __str__(self):
         """Convert the Player to a printable string."""
         return (
-            f'\n\tHi, my name is {self._name} ({self._id})\n'
-            f'\tBalance of {self.get_balance}\n'
+            f"\n\tHi, my name is {self._name} ({self._id})\n"
+            f"\tBalance of {self.get_balance}\n"
         )
 
     def __repr__(self):
@@ -176,6 +192,7 @@ class Player:
             f"\tBalance = {self.get_balance}\n"
             f"\tSplit   = {self._split}"
         )
+
 
 class ComputerPlayer(Player):
     """AI player class"""
@@ -200,17 +217,17 @@ class ComputerPlayer(Player):
             "\t(Type 'hit' or 'h' to hit, or just",
             "ENTER anykey to stand)\n\t",
         )
-        if self.score < 16:
+        if self.score < 17:
             print(f"\t{self.name} hit\n")
             return True
         print(f"\t{self.name} will stay\n\t")
         return False
 
+
 class Dealer(Player):
     """Dealer class"""
 
-    def __init__(self, name, n_decks=8, min_cut = 60,\
-        max_cut = 80):
+    def __init__(self, name, n_decks=8, min_cut=60, max_cut=80):
         """Initialize an AI dealer"""
         super().__init__(name)
         self._hide_second = True
@@ -218,7 +235,7 @@ class Dealer(Player):
         self._deck = cards.Deck()
         self._shoe = None
         self._cut_card_position = self.create_playing_deck(n_decks, min_cut, max_cut)
-   
+
     @property
     def score(self):
         """Return the player's score."""
@@ -228,7 +245,7 @@ class Dealer(Player):
     def hidden(self):
         """Check to see if dealer should reveal second card dealt"""
         return self._hide_second
-    
+
     @property
     def hide(self):
         """Hide second card dealt"""
@@ -238,17 +255,16 @@ class Dealer(Player):
     def show(self):
         """Reveal dealers second card"""
         self._hide_second = False
-    
+
     @property
     def deal(self):
         """Distribute a card from the deck"""
         self.check_shoe()
         return self._shoe.pop()
 
-    def create_playing_deck(self,n_decks, min_cut, max_cut):
+    def create_playing_deck(self, n_decks, min_cut, max_cut):
         """Create and add shuffled decks to shoe with cut card"""
-        cut_card_position = random.randrange(\
-            min_cut, max_cut)
+        cut_card_position = random.randrange(min_cut, max_cut)
         for _ in range(n_decks):
             self._deck.merge(cards.Deck())
         self._deck.shuffle(3)
@@ -262,7 +278,7 @@ class Dealer(Player):
         if len(self._deck) <= self._cut_card_position:
             print("\tCut card reached. Reshuffling...")
             time.sleep(1)
-            self.create_playing_deck(60,80)
+            self.create_playing_deck(8,60, 80)
             print("\tReshuffing Complete.")
 
     def hit_or_stand(self):
@@ -270,7 +286,6 @@ class Dealer(Player):
         if self.score < 17:
             print(f"\t{self.name} hits\n")
             return True
-        self._not_done = False
         print(f"\t{self.name} will stand \n")
         return False
 
