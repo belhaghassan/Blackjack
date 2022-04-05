@@ -85,6 +85,7 @@ def card_value(card):
     """Return the numerical value of the rank of a given card."""
     return Deck.value_dict[card.rank]
 
+
 def card_template(rank, suit):
     """Card graphic template"""
     if rank == "10":
