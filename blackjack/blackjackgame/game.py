@@ -86,9 +86,7 @@ class BlackJackGame:
                 else:
                     rnk = card.rank
                 suit = suits[card.suit]
-                if (
-                    player.name == "Dealer" and idx == 1 and player.hidden
-                ):
+                if player.name == "Dealer" and idx == 1 and player.hidden:
                     template = (
                         "\t ___________\n"
                         "\t|           |\n"
