@@ -87,9 +87,7 @@ class BlackJackGame:
                     rnk = card.rank
                 suit = suits[card.suit]
                 if (
-                    player.name == "Dealer"
-                    and idx == 1
-                    and player.hidden
+                    player.name == "Dealer" and idx == 1 and player.hidden
                 ):
                     template = (
                         "\t ___________\n"
@@ -130,7 +128,10 @@ class BlackJackGame:
 
             returned_player = None
             for veteran in self._records:
-                if veteran.name == player_name and veteran.identifier == player_user_id:
+                if (
+                    veteran.name == player_name
+                    and veteran.identifier == player_user_id
+                ):
                     self._players[veteran] = {}
                     returned_player = veteran
                     player_exists = True
@@ -147,10 +148,7 @@ class BlackJackGame:
 
                 returned_player = None
                 for veteran in self._records:
-                    if (
-                        veteran.name == ai_name 
-                        and veteran.identifier == _
-                    ):
+                    if veteran.name == ai_name and veteran.identifier == _:
                         self._players[veteran] = {}
                         returned_player = veteran
                         player_exists = True
@@ -177,7 +175,7 @@ class BlackJackGame:
                 if players.name != "Dealer":
                     print(
                         f"\t{players.name} loses $"
-                        f"\t{self._players[players][f'wager{hand + 1}']}" 
+                        f"\t{self._players[players][f'wager{hand + 1}']}"
                         "wager."
                     )
                 break
@@ -223,6 +221,7 @@ class BlackJackGame:
             )
 
     def game_round(self):
+        """Main round of blackjack to hit or stay"""
         # Player's opportunity to split, double down or buy insurance
         for players in self._players:
             if self._players[players]["wager1"] > 0:
@@ -247,8 +246,8 @@ class BlackJackGame:
 
                 # Check if player can split
                 if (
-                    # players.cards()[0].rank == players.cards()[1].rank and 
-                    (self._players[players]["wager1"] * 2) 
+                    players.cards()[0].rank == players.cards()[1].rank
+                    and (self._players[players]["wager1"] * 2)
                     <= players.get_balance
                 ):
                     split = input(

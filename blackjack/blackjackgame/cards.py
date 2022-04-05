@@ -29,8 +29,7 @@ Card.__str__ = _str_card
 
 class Deck:
     """Deck class to hold 52 French suited playing cards."""
-    
-    
+
     string = 'Jack Queen King'
     ranks = ['Ace'] + [str(x) for x in range(2, 11)] + string.split()
     suits = 'Clubs Hearts Spades Diamonds'.split()
