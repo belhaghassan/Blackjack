@@ -29,16 +29,16 @@ Card.__str__ = _str_card
 
 class Deck:
     """Deck class to hold 52 French suited playing cards."""
-
-    ranks = ['Ace'] + [str(x) for x in range(2, 11)]\
-        + 'Jack Queen King'.split()
+    string = 'Jack Queen King'
+    ranks = ['Ace'] + [str(x) for x in range(2, 11)] + string.split()
     suits = 'Clubs Hearts Spades Diamonds'.split()
     values = list(range(1, 11)) + [10, 10, 10]
     value_dict = dict(zip(ranks, values))
 
     def __init__(self):
-        self._cards = [Card(rank, suit)
-                       for suit in self.suits for rank in self.ranks]
+        self._cards = [
+            Card(rank, suit) for suit in self.suits for rank in self.ranks
+        ]
 
     @property
     def cards(self):
@@ -66,8 +66,7 @@ class Deck:
         """Cut the deck at approximately the half way point +/- 20% of the
         cards."""
         extra = ceil(len(self._cards) * 0.2)
-        half = (len(self._cards) // 2) + \
-            randrange(-extra, extra)
+        half = (len(self._cards) // 2) + randrange(-extra, extra)
         tophalf = self._cards[:half]
         bottomhalf = self._cards[half:]
         self._cards = bottomhalf + tophalf
@@ -87,27 +86,27 @@ def card_value(card):
     return Deck.value_dict[card.rank]
 
 def card_template(rank, suit):
-        """Card graphic template"""
-        if rank == "10":
-            return (
-                "\t ___________\n"
-                f'\t|{rank}{suit}        |\n'
-                '\t|           |\n'
-                '\t|           |\n'
-                f'\t|     {suit}     |\n'
-                '\t|           |\n'
-                '\t|           |\n'
-                f'\t|        {suit}{rank}|\n'
-                '\t|___________|\n\n'
-            )
+    """Card graphic template"""
+    if rank == "10":
         return (
-            "\t __________\n"
+            "\t ___________\n"
             f'\t|{rank}{suit}        |\n'
-            '\t|          |\n'
-            '\t|          |\n'
-            f'\t|    {suit}     |\n'
-            '\t|          |\n'
-            '\t|          |\n'
+            '\t|           |\n'
+            '\t|           |\n'
+            f'\t|     {suit}     |\n'
+            '\t|           |\n'
+            '\t|           |\n'
             f'\t|        {suit}{rank}|\n'
-            '\t|__________|\n\n'
+            '\t|___________|\n\n'
         )
+    return (
+        "\t __________\n"
+        f'\t|{rank}{suit}        |\n'
+        '\t|          |\n'
+        '\t|          |\n'
+        f'\t|    {suit}     |\n'
+        '\t|          |\n'
+        '\t|          |\n'
+        f'\t|        {suit}{rank}|\n'
+        '\t|__________|\n\n'
+    )
