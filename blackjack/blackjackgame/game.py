@@ -65,23 +65,22 @@ class BlackJackGame:
                         rnk = card.rank
                     suit = suits[card.suit]
                     cards_in_hand.append(cards.card_template(rnk, suit))
-                card_list = list(range(len(cards)))
+                card_list = list(range(len(cards_in_hand)))
                 lines = [cards_in_hand[i].splitlines() for i in card_list]
                 for lis in zip(*lines):
                     print(*lis, sep="")
                 score = player.score2 if idx == 1 else player.score
-                if idx == 1:
-                    print(
-                        f"\tCurrent Score: {score}\n"
-                        f"\tCurrent Wager: $"
-                        f"{self._players[player][f'wager{idx + 1}']}"
-                    )
+                print(
+                    f"\tCurrent Score: {score}\n"
+                    f"\tCurrent Wager: $"
+                    f"{self._players[player][f'wager{idx + 1}']}"
+                )
                 time.sleep(1)
                 cards_in_hand.clear()
 
         else:
             print(f"\t{player.name}'s Hand:")
-            for card in player.cards():
+            for idx, card in enumerate(player.cards()):
                 if card.rank in rank:
                     rnk = rank[card.rank]
                 else:
@@ -89,7 +88,7 @@ class BlackJackGame:
                 suit = suits[card.suit]
                 if (
                     player.name == "Dealer"
-                    and player.cards()[1] == card
+                    and idx == 1
                     and player.hidden
                 ):
                     template = (
@@ -148,7 +147,10 @@ class BlackJackGame:
 
                 returned_player = None
                 for veteran in self._records:
-                    if veteran.name == ai_name and veteran.identifier == _:
+                    if (
+                        veteran.name == ai_name 
+                        and veteran.identifier == _
+                    ):
                         self._players[veteran] = {}
                         returned_player = veteran
                         player_exists = True
@@ -161,22 +163,22 @@ class BlackJackGame:
                 time.sleep(0.5)
                 print(f"\n\tAI {ai_name} joined the game\n\n")
 
-        print("\tPlayers:\n\t", self._players)
-
         time.sleep(1)
 
     def hit_or_stay(self, players, hand):
         """Function to deal card or stay"""
         while players.hit_or_stand():
-            print(self.line)
+            time.sleep(1)
             players.add_card(self._dealer.deal, hand)
             players.add_score()
             self.new_hand(players)
+            time.sleep(0)
             if players.score > 21:
                 if players.name != "Dealer":
                     print(
-                        f"{players.name} loses $"
-                        f"{self._players[players][f'wager{hand + 1}']} wager."
+                        f"\t{players.name} loses $"
+                        f"\t{self._players[players][f'wager{hand + 1}']}" 
+                        "wager."
                     )
                 break
 
@@ -238,13 +240,16 @@ class BlackJackGame:
                     )
                     if insurance in ["y", "yes"] and players.get_balance > 0:
                         print(f"\n\t{players.name} buys insurance!")
-                        self._players[players]["insurance"] = players.place_bet()
+                        self._players[players][
+                            "insurance"
+                        ] = players.place_bet()
                         players.wage(self._players[players]["insurance"])
 
                 # Check if player can split
                 if (
-                    players.cards()[0].rank == players.cards()[1].rank
-                    and (self._players[players]["wager1"] * 2) < players.get_balance
+                    # players.cards()[0].rank == players.cards()[1].rank and 
+                    (self._players[players]["wager1"] * 2) 
+                    <= players.get_balance
                 ):
                     split = input(
                         "\tWould you like to split? ('yes'/'y' or 'no'/'n'): "
@@ -253,9 +258,9 @@ class BlackJackGame:
                         players.split()
                         players.add_card(self._dealer.deal, 0)
                         players.add_card(self._dealer.deal, 1)
-                        self._players[players]["wager2"] = self._players[players][
-                            "wager1"
-                        ]
+                        self._players[players]["wager2"] = self._players[
+                            players
+                        ]["wager1"]
                         players.wage(self._players[players]["wager2"])
                         self.new_hand(players)
 
@@ -266,15 +271,15 @@ class BlackJackGame:
                 if players.is_split:
                     if players.double_down:
                         if players.double_down2 is False:
-                            print("\tFor hand 2:\n")
+                            print("\n\tFor hand 2:")
                             self.hit_or_stay(players, 1)
                     elif players.double_down2:
-                        print("\tFor hand 1:\n")
+                        print("\n\tFor hand 1:")
                         self.hit_or_stay(players, 0)
                     else:
-                        print("\tFor hand 1:\n")
+                        print("\n\tFor hand 1:")
                         self.hit_or_stay(players, 0)
-                        print("\tFor hand 2:\n")
+                        print("\n\tFor hand 2:")
                         self.hit_or_stay(players, 1)
                 elif players.double_down is False:
                     self.hit_or_stay(players, 0)
@@ -327,8 +332,10 @@ class BlackJackGame:
 
             # Players asked to place bet
             for plyr in self._players:
+                print(f"\t{plyr.name}'s Balance: {plyr.get_balance}")
                 self._players[plyr] = {"wager1": plyr.place_bet()}
                 plyr.wage(self._players[plyr]["wager1"])
+                print()
 
             # Deal to two cards to each player
             for _ in range(2):
@@ -342,6 +349,7 @@ class BlackJackGame:
             # Dealers move
             dealer.show
             dealer.add_score()
+            self.line
             print("\tDealers Turn\n")
             self.hand(dealer)
             time.sleep(1)
@@ -450,7 +458,9 @@ class BlackJackGame:
                 player.double_down = True
                 player.add_card(self._dealer.deal)
                 player.wage(self._players[player]["wager1"])
-                self._players[player]["wager1"] = self._players[player]["wager1"] * 2
+                self._players[player]["wager1"] = (
+                    self._players[player]["wager1"] * 2
+                )
 
             self.new_hand(player)
             if player.score > 21 or player.score2 > 21:

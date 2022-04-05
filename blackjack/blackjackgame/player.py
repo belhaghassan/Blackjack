@@ -171,7 +171,7 @@ class Player:
         while (wage > self.get_balance or wage < 0) and tries > 0:
             print(
                 "\tInvalid wager entered, try again.\n",
-                f"\tCurrent balance: ${self.get_balance}"
+                f"\tCurrent balance: ${self.get_balance}",
             )
 
             wage = int(input(f"\t{self.name}. How much do you wager? "))
@@ -241,9 +241,7 @@ class ComputerPlayer(Player):
         """Hit or stay methed"""
         print(f"\n\tWould {self.name} like to Hit or stand? \n")
         time.sleep(0.5)
-        print(
-            "\t(Type 'hit'/'h' to hit, or anykey to stand)\n\t"
-        )
+        print("\t(Type 'hit'/'h' to hit, or anykey to stand)\n\t")
         if self.score < 17:
             print(f"\t{self.name} hit\n")
             return True
@@ -333,6 +331,7 @@ class Dealer(Player):
             f"{'?' if self.hidden else self._score}"
             f"): Balance -> {self.get_balance}"
         )
+
 
 def to_file(pickle_file, players):
     """Write the list players to the file pickle_file."""
