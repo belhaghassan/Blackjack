@@ -171,11 +171,10 @@ class Player:
         while (wage > self.get_balance or wage < 0) and tries > 0:
             print(
                 "\tInvalid wager entered, try again.\n",
-                f"\tCurrent balance: ${self.get_balance}")
+                f"\tCurrent balance: ${self.get_balance}"
+            )
 
-            wage = int(input(
-                f"\t{self.name}. How much do you wager? ")
-                )
+            wage = int(input(f"\t{self.name}. How much do you wager? "))
             tries -= 1
         return wage if tries > 0 else 0
 
@@ -234,9 +233,7 @@ class ComputerPlayer(Player):
     def place_bet(self):
         """AI random bet"""
         wage = 400
-        print(
-            f"\n\tPlayer {self.name}. How much do you wager? {wage}\n"
-        )
+        print(f"\n\tPlayer {self.name}. How much do you wager? {wage}\n")
         time.sleep(0.5)
         return wage
 
@@ -245,8 +242,7 @@ class ComputerPlayer(Player):
         print(f"\n\tWould {self.name} like to Hit or stand? \n")
         time.sleep(0.5)
         print(
-            "\t(Type 'hit' or 'h' to hit, or just",
-            "ENTER anykey to stand)\n\t",
+            "\t(Type 'hit'/'h' to hit, or anykey to stand)\n\t"
         )
         if self.score < 17:
             print(f"\t{self.name} hit\n")
@@ -260,13 +256,14 @@ class Dealer(Player):
 
     def __init__(self, name, n_decks=8, min_cut=60, max_cut=80):
         """Initialize an AI dealer"""
-        super().__init__(name, identifier=random.randint(100,1000))
+        super().__init__(name, identifier=random.randint(100, 1000))
         self._hide_second = True
         self._balance = 10000000000000000000
         self._deck = cards.Deck()
         self._shoe = None
-        self._cut_card_position = \
-            self.create_playing_deck(n_decks, min_cut, max_cut)
+        self._cut_card_position = self.create_playing_deck(
+            n_decks, min_cut, max_cut
+        )
 
     @property
     def score(self):
@@ -310,7 +307,7 @@ class Dealer(Player):
         if len(self._deck) <= self._cut_card_position:
             print("\tCut card reached. Reshuffling...")
             time.sleep(1)
-            self.create_playing_deck(8,60, 80)
+            self.create_playing_deck(8, 60, 80)
             print("\tReshuffing Complete.")
 
     def hit_or_stand(self):
@@ -338,9 +335,9 @@ class Dealer(Player):
         )
 
 def to_file(pickle_file, players):
-        """Write the list players to the file pickle_file."""
-        with open(pickle_file, 'wb') as file_handle:
-            pickle.dump(players, file_handle, pickle.HIGHEST_PROTOCOL)
+    """Write the list players to the file pickle_file."""
+    with open(pickle_file, 'wb') as file_handle:
+        pickle.dump(players, file_handle, pickle.HIGHEST_PROTOCOL)
 
 
 def from_file(pickle_file):
