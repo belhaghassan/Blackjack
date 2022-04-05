@@ -12,36 +12,26 @@
 
 """This is a game of BlackJackGame with 1 - 4 players"""
 
+from random import randint
 import time
-import pickle
 import os
 from blackjackgame import cards
 from blackjackgame import player as Player
 
 class BlackJackGame:
+    """Game Class for Blackjack"""
     def __init__(self):
         self._num_of_players = 0
-        self._dealer = Player.Dealer("Dealer")
+        self._dealer = Player.Dealer("Dealer", randint(100, 1000))
+        self._records = None
         self._players = {}
         self._ai_players = ["Optimus Prime", "Megatron", "Zora", "Skynet"]
         self._game_is_not_over = True
         self.line = (
-        "\n\t"
+        "\t"
         "******************************************************************"
         "\n"
         )
-
-    def to_file(self, pickle_file, players):
-        """Write the list players to the file pickle_file."""
-        with open(pickle_file, 'wb') as file_handle:
-            pickle.dump(players, file_handle, pickle.HIGHEST_PROTOCOL)
-
-
-    def from_file(self, pickle_file):
-        """Read the contents of pickle_file, decode it, and return it as players."""
-        with open(pickle_file, 'rb') as file_handle:
-            players = pickle.load(file_handle)
-        return players
 
     def new_hand(self, player):
         """Print out of current player and Dealers hand"""
@@ -50,38 +40,9 @@ class BlackJackGame:
         self._dealer.add_score()
         self.hand(self._dealer)
         time.sleep(1)
-        print(
-            f"\tCurrent Score: {self._dealer.score}\n"
-        )
-
         self.hand(player)
         time.sleep(1)
 
-    def card_template(self, rank, suit):
-        """Card graphic template"""
-        if rank == 10:
-            return (
-                "\t ___________\n"
-                f'\t|{rank}{suit}        |\n'
-                '\t|           |\n'
-                '\t|           |\n'
-                f'\t|     {suit}     |\n'
-                '\t|           |\n'
-                '\t|           |\n'
-                f'\t|        {suit}{rank}|\n'
-                '\t|___________|\n\n'
-            )
-        return (
-            "\t __________\n"
-            f'\t|{rank}{suit}        |\n'
-            '\t|          |\n'
-            '\t|          |\n'
-            f'\t|    {suit}     |\n'
-            '\t|          |\n'
-            '\t|          |\n'
-            f'\t|        {suit}{rank}|\n'
-            '\t|__________|\n\n'
-        )
 
     def hand(self, player):
         """Graphical representation of player hand"""
@@ -90,33 +51,35 @@ class BlackJackGame:
         rank = {'Jack': 'J', 'Queen': 'Q', 'King': 'K', 'Ace': 'A'}
 
         time.sleep(1)
-        cards = []
-
+        cards_in_hand = []
+        print(self.line)
         if player.is_split:
-            print(f"\n\t{player.name}'s Hand:")
+            print(f"\t{player.name}'s Hand:")
             for idx, hand in enumerate(player.cards()):
-                print(f"\tHand {idx + 1}\n")
+                print(f"\n\tHand {idx + 1}")
                 for card in hand:
                     if card.rank in rank:
                         rnk = rank[card.rank]
                     else:
                         rnk = card.rank
                     suit = suits[card.suit]
-                    cards.append(self.card_template(rnk,suit))
+                    cards_in_hand.append(cards.card_template(rnk,suit))
                 card_list = list(range(len(cards)))
-                lines = [cards[i].splitlines() for i in card_list]
+                lines = [cards_in_hand[i].splitlines() for i in card_list]
                 for lis in zip(*lines):
                     print(*lis, sep='')
-                print(
-                    f"\tCurrent Score: {player.score}\n"
+                score = player.score2 if idx == 1 else player.score
+                if idx == 1:
+                    print(
+                        f"\tCurrent Score: {score}\n"
                     f"\tCurrent Wager: $"
                     f"{self._players[player][f'wager{idx + 1}']}"
                 )
                 time.sleep(1)
-                cards.clear()
-                print(self.line)
+                cards_in_hand.clear()
+
         else:
-            print(f"\n\t{player.name}'s Hand:")
+            print(f"\t{player.name}'s Hand:")
             for card in player.cards():
                 if card.rank in rank:
                     rnk = rank[card.rank]
@@ -138,91 +101,127 @@ class BlackJackGame:
                     '\t|___________|\n\n'
                     )
                 else:
-                    template = self.card_template(rnk,suit) 
-                cards.append(template)
-            card_list = list(range(len(cards)))
-            lines = [cards[i].splitlines() for i in card_list]
+                    template = cards.card_template(rnk,suit)
+                cards_in_hand.append(template)
+            card_list = list(range(len(cards_in_hand)))
+            lines = [cards_in_hand[i].splitlines() for i in card_list]
             for lis in zip(*lines):
                 print(*lis, sep='')
             print(
                 f"\tCurrent Score: {player.score}\n"
-                f"\tCurrent Wager: $"
-                f"{self._players[player][f'wager1']}"
             )
-            print(self.line)
+        print(self.line)
 
         time.sleep(1)
 
     def player_input(self, num_of_players):
         """Take in and save player names"""
 
-        players_dict = self._players
+        if os.path.exists('players.pkl'):
+            self._records = Player.from_file('players.pkl')
+        else:
+            Player.to_file('players.pkl', {})
+            self._records = Player.from_file('players.pkl')
+
         for plyr in range(num_of_players):
-            # player_name = input(f"\n\tPlayer {plyr + 1}'s name: ")
-            player_name = 'Bilsabob'
-            players_dict[Player.Player(player_name)] = {}
+            player_name = input(f"\n\tPlayer {plyr + 1}'s name: ")
+            player_user_id = input(f"\t{player_name}'s user ID: ")
+            player_exists = False
+
+            returned_player = None
+            for veteran in self._records:
+                if veteran.name == player_name and \
+                    veteran.identifier == player_user_id:
+                    self._players[veteran] = {}
+                    returned_player = veteran
+                    player_exists = True
+            if returned_player is not None:
+                self._records.pop(returned_player)
+            if player_exists is False:
+                self._players[Player.Player(player_name, player_user_id)] = {}
+
 
         if num_of_players < 2:
             for _ in range(2 - num_of_players):
-                ai_name = self._ai_players.pop(0)
-                players_dict[Player.ComputerPlayer(ai_name)] = {}
+                ai_name = self._ai_players.pop(_)
+                ai_player = Player.ComputerPlayer(ai_name, _)
+                player_exists = False
+
+                returned_player = None
+                for veteran in self._records:
+                    if veteran.name == ai_name and \
+                        veteran.identifier == _:
+                        self._players[veteran] = {}
+                        returned_player = veteran
+                        player_exists = True
+                if returned_player is not None:
+                    self._records.pop(returned_player)
+                if player_exists is False:
+                    self._players[ai_player] = {}
+
                 self._num_of_players += 1
                 time.sleep(0.5)
-                print(f"\n\tAI {list(players_dict)[-1].name} joined the game")
+                print(f"\n\tAI {ai_name} joined the game\n\n")
+
+        print("\tPlayers:\n\t", self._players)
+        print("\n\tFrom File:\n\t", self._records, "\n")
 
         time.sleep(1)
+
     def hit_or_stay(self, players, hand):
+        """Function to deal card or stay"""
         while players.hit_or_stand():
             print(self.line)
             players.add_card(self._dealer.deal, hand)
-            players.add_score
+            players.add_score()
             self.new_hand(players)
             if players.score > 21:
-                print(f"\t{players.name} busts "
-                f"and loses ${self._players[players]['wager1']} wager.")
+                if players.name != "Dealer":
+                    print(
+                        f"{players.name} loses $"
+                        f"{self._players[players][f'wager{hand + 1}']} wager."
+                    )
                 break
 
     def check_winners(self, player, hand, wager):
         """Check if player beat dealer"""
-        players_dict = self._players
+
+        wage = self._players[player][wager]
         if hand < 22:
-            if self._dealer.score == 21 and hand == 21:
-                print("\n\tDraw - Non winnings or losses.\n")            
+            if self._dealer.score == hand:
+                print("\tDRAW - No winnings or losses.\n")
+                player.add_balance(wage)
+
             elif self._dealer.score > 22 or hand > self._dealer.score:
+
+                player.add_balance(wage * 2)
                 print(
-                    "\t\t\t\t******WINNER******\n"
-                    f"\t{player.name} wins ${players_dict[player][wager]} wager\n"
-                    f"\tStarting Balance: {player.get_balance}"
+                    "\t\t\t\t******WINNER******\n\n"
+                    f"\t{player.name} wins ${wage} wager\n"
                 )
-                player.win(players_dict[player][wager])
-                print(
-                    f"\tNew Balance with winnings:"
-                    f" {player.get_balance}"
-                    f"{self.line}\n"
-                    )
+                print(f"\tNew Balance after winning: ${player.get_balance}\n\n")
+                self.line
             else:
                 print(
-                    f"\t{player.name} loses ${players_dict[player][wager]} wager\n"
-                    f"\tStarting Balance: {player.get_balance}"
-                    f"{self.line}\n"
+                    f"\t{player.name} loses ${wage} wager\n"
+                    f"\tNew Balance after losing: ${player.get_balance}\n\n"
                 )
-                player.lose(players_dict[player][wager])
-                print(
-                    f"\tNew Balance after losing: "
-                    f"{player.get_balance}"
-                    f"{self.line}\n"
-                )
+                self.line
         else:
-            print(f"\t{player.name} loses ${players_dict[player][wager]} wager\n")
-            print(f"\tStarting Balance: {player.get_balance}\n")
-            player.lose(players_dict[player][wager])
-            print(f"\tNew Balance after losing: {player.get_balance}\n\n")
-            print(self.line)
-
-        if 'insurance' in players_dict[player] and self._dealer.score == 21:
             print(
+                f"\t{player.name} loses ${wage} wager\n"
+                f"\tNew Balance after losing: ${player.get_balance}\n\n"
+            )
+            self.line
+
+        if 'insurance' in self._players[player] and self._dealer.score == 21:
+            player.add_balance(self._players[player]['insurance'] * 2)
+            print(
+                f"{self.line}"
                 "\t\t\t\t******WINNER******\n"
-                f"{player} wins insurance wager of {players_dict[player]['insurance']}"
+                f"{player} wins insurance wager of $",
+                f"{self._players[player]['insurance']}\n\n"
+                f"{self.line}"
             )
 
 
@@ -230,150 +229,165 @@ class BlackJackGame:
         """Main BlackJack run function"""
 
         welcome = """
-         ________________________________________________________________
-        |                                                                |
-        |    ♣  ♥  ♠  ♦                                    ♣  ♥  ♠  ♦    |
-        |                           WELCOME                              |
-        |                             TO                                 |
-        |                                                                |
-        |         ___   __            __       __            __          |
-        |        / _ ) / /___ _ ____ / /__ __ / /___ _ ____ / /__        |
-        |       / _  |/ // _ `// __//  '_// // // _ `// __//  '_/        |
-        |      /____//_/ \\_,_/ \\__//_/\\_\\ \\___/ \\_,_/ \\__//_/\\_\\         |  
-        |                                                                |
-        |                                                                |
-        |                         ____ ___________                       |
-        |                        |    |           |                      |
-        |                        | J♠ |A♠         |                      |
-        |                        |    |           |                      |
-        |                        |    |     ♠     |                      |
-        |                        |    |           |                      |
-        |                        |    |        A♠ |                      |
-        |                        |____|___________|                      |
-        |                                                                |
-        |                                                                |
-        |    ♣  ♥  ♠  ♦                                    ♣  ♥  ♠  ♦    |
-        |________________________________________________________________|
+         _______________________________________________________________
+        |                                                               |
+        |    ♣  ♥  ♠  ♦                                    ♣  ♥  ♠  ♦   |
+        |                           WELCOME                             |
+        |                             TO                                |
+        |                                                               |
+        |         ___   __            __       __            __         |
+        |        / _ ) / /___ _ ____ / /__ __ / /___ _ ____ / /__       |
+        |       / _  |/ // _ `// __//  '_// // // _ `// __//  '_/       |
+        |      /____//_/ \\_,_/ \\__//_/\\_\\ \\___/ \\_,_/ \\__//_/\\_\\  \t|
+        |                                                               |
+        |                                                               |
+        |                         ____ ___________                      |
+        |                        |    |           |                     |
+        |                        | J♠ |A♠         |                     |
+        |                        |    |           |                     |
+        |                        |    |     ♠     |                     |
+        |                        |    |           |                     |
+        |                        |    |        A♠ |                     |
+        |                        |____|___________|                     |
+        |                                                               |
+        |                                                               |
+        |    ♣  ♥  ♠  ♦                                    ♣  ♥  ♠  ♦   |
+        |_______________________________________________________________|
         """
         print('\t\t', welcome)
         print(self.line)
 
         # Ask user how many players are going to play?
         while True:
-            print("\tHow many players: [1 - 4]? \n\t" , end=" ")
+            print("\tHow many players: [1 - 4]? " , end=" ")
             self._num_of_players = int(f"{input()}")
             if self._num_of_players <= 4 and self._num_of_players >= 1:
                 break
             print("\tInvalid number of players. Try again.\n")
 
         self.player_input(self._num_of_players)
-        print(self.line)
 
         dealer = self._dealer
 
-        # self.to_file('players.pkl', players_dict)
-
         while self._game_is_not_over:
-            if os.path.exists('players.pkl'):
-                self._players = self.from_file('players.pkl')
 
-            players_dict = self._players
             # Players asked to place bet
-            for plyr in players_dict:
-                players_dict[plyr] = {'wager1': plyr.place_bet()}
+            for plyr in self._players:
+                self._players[plyr] = {'wager1': plyr.place_bet()}
+                plyr.wage(self._players[plyr]['wager1'])
+                print(plyr)
 
             # Deal to two cards to each player
             for _ in range(2):
-                for plyr in players_dict:
-                    if players_dict[plyr]['wager1'] > 0:
+                for plyr in self._players:
+                    if self._players[plyr]['wager1'] > 0:
                         plyr.add_card(dealer.deal)
                 dealer.add_card(dealer.deal)
 
-            print(self.line)
             # Player's opportunity to split, double down or buy insurance
-            for players in players_dict:
-                self.new_hand(players)
-                if cards.card_value(dealer.cards()[0]) == 10 or dealer.cards()[0].rank == "Ace":
-                    insurance = input("\tWould you like to buy insurance? ('yes' or 'no') \n\t")
-                    if insurance == ('y' or 'yes'):
-                        players_dict[players]['insurance']\
-                            = players.place_bet()
+            for players in self._players:
+                if self._players[players]['wager1'] > 0:
+                    if players.get_balance < 1:
+                        players.top_up()
+                    self.new_hand(players)
+                    if cards.card_value(
+                        dealer.cards()[0]) == 10 or \
+                        dealer.cards()[0].rank == "Ace":
 
-                # Check if player can split
-                # if players.cards()[0].rank == players.cards()[1].rank and\
-                if (players_dict[players]['wager1'] * 2) < players.get_balance:
-                    split = input("\tWould you like to split? \n\t")
-                    if split == ('y' or 'yes'):
-                        players.split()
-                        players.add_card(dealer.deal, 0)
-                        players.add_card(dealer.deal, 1)
-                        players_dict[players]['wager2'] = players_dict[players]['wager1']
-                        self.new_hand(players)
+                        insurance = input(
+                            f"\tWould {players.name} like to buy insurance?"
+                            " ('yes'/'y' or 'no'/'n'): "
+                            )
+                        if insurance  in ['y','yes'] and players.get_balance > 0:
+                            print(f"\n\t{players.name} buys insurance!")
+                            self._players[players]['insurance']\
+                                = players.place_bet()
+                            players.wage(self._players[players]['insurance'])
 
-                # Check if player wants to double down
-                if players_dict[players]['wager1'] * 2 < players.get_balance:
-                    self.double_down(players)
+                    # Check if player can split
+                    if players.cards()[0].rank == players.cards()[1].rank and\
+                        (self._players[players]['wager1'] * 2) < \
+                            players.get_balance:
+                        split = input("\tWould you like to split? ('yes'/'y' or 'no'/'n'): ")
+                        if split in ['y', 'yes']:
+                            players.split()
+                            players.add_card(dealer.deal, 0)
+                            players.add_card(dealer.deal, 1)
+                            self._players[players]['wager2'] = \
+                                self._players[players]['wager1']
+                            players.wage(self._players[players]['wager2'])
+                            self.new_hand(players)
 
-                if players.is_split:
-                    if players.double_down and players.double_down2:
+                    # Check if player wants to double down
+                    if self._players[players]['wager1'] * 2 < players.get_balance:
+                        self.double_down(players)
+
+                    if players.is_split:
+                        if players.double_down and players.double_down2:
+                            if players.double_down2 is False:
+                                self.hit_or_stay(players, 1)
+                        elif players.double_down2:
+                            self.hit_or_stay(players, 0)
+                        else:
+                            self.hit_or_stay(players, 0)
+                    elif players.double_down is False:
                         self.hit_or_stay(players, 0)
-                        self.hit_or_stay(players, 1)
-                    elif players.double_down:
-                        self.hit_or_stay(players, 1)
-                    elif players.double_down2:
-                        self.hit_or_stay(players, 0)
-                elif players.double_down is False:
-                    self.hit_or_stay(players, 0)
+
             # Dealers move
             dealer.show
             dealer.add_score()
-            print(self.line)
+            print("\tDealers Turn\n")
             self.hand(dealer)
             time.sleep(1)
             print(f"\tDealer's score: {dealer.score}")
-            while dealer.hit_or_stand() and dealer.score < 22:
-                print(self.line)
-                dealer.add_card(dealer.deal)
-                dealer.add_score()
-                self.hand(dealer)
-            if dealer.score > 21:
-                print("\tDealer Busts!")
+            self.hit_or_stay(dealer, dealer.cards()[0])
 
             # Check which players win
-            for player in players_dict:
-                print(self.line)
+            for player in self._players.items():
                 self.new_hand(player)
-                print(self.line)
-                if players.score2:
+                if player.score2:
                     self.check_winners(player, player.score, 'wager1')
                     self.check_winners(player, player.score2, 'wager2')
+                    del self._players[player]['wager2']
                 else:
                     self.check_winners(player, player.score, 'wager1')
                 player.reset
+                del self._players[player]['wager1']
             dealer.reset
             dealer.hide
 
-            self.to_file('players.pkl', players_dict)
+            self._players.update(self._records)
+            Player.to_file('players.pkl', self._players)
 
             print(self.line)
 
             if input(
-                f"\n\tPlayer {list(players_dict)[0].name} would you like to "
-                "play again? \n\t['y' or 'yes' or 'n' or 'no']\n\t"
-            ) == ('y' or'yes'):
-                print("\n\tAnother one!\n")
+                f"\n\tPlayer {list(self._players)[0].name} would you like to "
+                "play again? \n\t('yes'/'y' or 'no'/'n'): "
+            ) in ['y','yes']:
+                print(
+                        "\n",self.line, self.line,
+                        "\n\t\t\t\tANOTHER ROUND!\n\n",
+                        self.line, self.line,
+                    )
             else:
                 self._game_is_not_over = False
-                print("\n\tGameOver")
+                print(
+                    "\n",self.line, self.line,
+                    "\n\t\t\t\tGAME OVER\n\n",
+                    self.line, self.line,
+                )
 
-    def double_down(self, players):
+
+    def double_down(self, player):
         """Function to double down on a players wager"""
-        players_dict = self._players
 
-        double_down = input("\tWould you like to double down? ('yes' or 'no')\n\t")
-        if double_down == ('y' or 'yes'):
-            if players.is_split:
-                if players_dict[players]['wager1'] * 4 < players.get_balance:
+        double_down = input(
+            "\tWould you like to double down? ('yes'/'y' or 'no'/'n'): "
+            )
+        if double_down in ['y','yes']:
+            if player.is_split:
+                if self._players[player]['wager1'] * 4 < player.get_balance:
                     choice = input(
                         "\n\tWhich hand would you like to double down on?"
                         "\n\t- ANYKEY for first"
@@ -388,41 +402,37 @@ class BlackJackGame:
                         "\n\t- '2' for second hand"
                         "\n\t"
                         )
-                if choice == 'both' and players_dict[players]['wager1'] * 4 < players.get_balance:
-                    print(f"\n\t{players} will double down on both hands!\n")
-                    players.add_card(self._dealer.deal)
-                    players.add_card(self._dealer.deal, 1)
-                    players.double_down = True
-                    players.double_down2 = True
-                    players_dict[players]['wager1'] = players_dict[players]['wager1'] * 2
-                    players_dict[players]['wager2'] = players_dict[players]['wager1']
+                if choice == 'both' and self._players[player]['wager1'] * 4 < player.get_balance:
+                    player.add_card(self._dealer.deal)
+                    player.add_card(self._dealer.deal, 1)
+                    player.double_down = True
+                    player.double_down2 = True
+                    player.wage(self._players[player]['wager1'] * 2)
+                    self._players[player]['wager2'] = self._players[player]['wager1'] * 2
+                    self._players[player]['wager1'] = self._players[player]['wager1'] * 2
+                    print(f"\n\t{player.name} doubled down on BOTH hands!\n")
                 elif choice == "2":
-                    print(f"\n\t{players} will double down on 2nd hand!\n")
-                    players.add_card(self._dealer.deal, 1)
-                    players.double_down2 = True 
-                    players_dict[players]['wager2']\
-                        = players_dict[players]['wager1'] * 2
+                    print(f"\n\t{player.name} will double down on 2nd hand!\n")
+                    player.add_card(self._dealer.deal, 1)
+                    player.double_down2 = True
+                    player.wage(self._players[player]['wager1'])
+                    self._players[player]['wager2']\
+                        = self._players[player]['wager1'] * 2
                 else:
-                    print(f"\n\t{players} will double down on 1st hand!\n")
-                    players.add_card(self._dealer.deal)
-                    players.double_down = True
-                    players_dict[players]['wager1']\
-                        = players_dict[players]['wager1'] * 2
+                    print(f"\n\t{player.name} will double down on 1st hand!\n")
+                    player.add_card(self._dealer.deal)
+                    player.double_down = True
+                    player.wage(self._players[player]['wager1'])
+                    self._players[player]['wager1']\
+                        = self._players[player]['wager1'] * 2
             else:
-                players.double_down = True
-                players_dict[players]['wager1']\
-                    = players_dict[players]['wager1'] * 2
+                print(f"\n\t{player.name} doubles down on hand!\n")
+                player.double_down = True
+                player.add_card(self._dealer.deal)
+                player.wage(self._players[player]['wager1'])
+                self._players[player]['wager1']\
+                    = self._players[player]['wager1'] * 2
 
-        
-            if players.is_split and players.double_down is False or players.double_down2 is False:
-                hand = 0 if players.double_down else 1
-                if players.double_down2:
-                    while players.hit_or_stand():
-                        print(self.line)
-                        players.add_card(self._dealer.deal, hand)
-                        self.new_hand(players)
-                        if players.score > 21:
-                            print(f"\t{players.name} busts and loses"
-                            f" ${players_dict[players][f'wager{hand + 1}']}"
-                            " wager.")
-                            time.sleep(1)
+            self.new_hand(player)
+            if player.score > 21 or player.score2 > 21:
+                print(f"\t{player.name} Busts!\n")

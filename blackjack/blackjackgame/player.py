@@ -14,16 +14,17 @@
 
 import time
 import random
+import pickle
 from blackjackgame import cards
-
 
 
 class Player:
     """Human player class"""
 
-    def __init__(self, name):
+    def __init__(self, name, identifier):
         """Initialize a human player"""
         self._name = name
+        self._identifier = identifier
         self._cards = []
         self._score = 0
         self._score2 = 0
@@ -31,8 +32,6 @@ class Player:
         self._double_down2 = False
         self._balance = 10000
         self._split = False
-        self._bet_made = False
-        self._id = random.randint(1000, 100000)
 
     @property
     def reset(self):
@@ -45,25 +44,14 @@ class Player:
         self._split = False
 
     @property
-    def double_down(self):
-        return self._double_down
-    
-    @property
-    def double_down2(self):
-        return self._double_down2
-    
-    @double_down.setter
-    def double_down(self, true_or_false):
-        self._double_down = true_or_false
-    
-    @double_down2.setter
-    def double_down2(self, true_or_false):
-        self._double_down2 = true_or_false
-
-    @property
     def name(self):
         """Return the player's name"""
         return self._name
+
+    @property
+    def identifier(self):
+        """Return the player's id"""
+        return self._identifier
 
     @property
     def score(self):
@@ -85,15 +73,33 @@ class Player:
         """Returns split property"""
         return self._split
 
-    def check_ace(self, hand, score):
-        """Check and change value of Ace"""
-        for card in hand:
-            if score == "score0":
-                if card.rank == "Ace" and self.score > 22:
-                    self._score = self._score - 10
-            else:
-                if card.rank == "Ace" and self.score2 > 22:
-                    self._score2 = self._score2 - 10
+    @property
+    def double_down(self):
+        """Return true or false for first hand double down"""
+        return self._double_down
+
+    @property
+    def double_down2(self):
+        """Return true or false for 2nd hand double down"""
+        return self._double_down2
+
+    @double_down.setter
+    def double_down(self, true_or_false):
+        """Set true or false for first hand double down"""
+        self._double_down = true_or_false
+
+    @double_down2.setter
+    def double_down2(self, true_or_false):
+        """Set true or false for 2nd hand double down"""
+        self._double_down2 = true_or_false
+
+    def wage(self, wager):
+        """Deduct wage from balance"""
+        self._balance = self._balance - wager
+
+    def add_balance(self, winnings):
+        """Add wages plus winnings back to balance"""
+        self._balance = self._balance + winnings
 
     def win(self, wager):
         """Add to balance"""
@@ -110,6 +116,16 @@ class Player:
         else:
             self._cards.append(card)
 
+    def check_ace(self, hand, score):
+        """Check and change value of Ace"""
+        for card in hand:
+            if score == "score0":
+                if card.rank == "Ace" and self._score > 21:
+                    self._score = self._score - 10
+            else:
+                if card.rank == "Ace" and self._score2 > 21:
+                    self._score2 = self._score2 - 10
+
     def add_score(self):
         """Add up the player's score."""
         if self.is_split is False:
@@ -120,6 +136,7 @@ class Player:
                 else:
                     score += cards.card_value(card)
             self._score = score
+            self.check_ace(self.cards(), "score0")
         else:
             score0 = 0
             score2 = 0
@@ -135,18 +152,30 @@ class Player:
                     score2 += cards.card_value(card)
             self._score = score0
             self._score2 = score2
-            self.check_ace(self.cards()[0], "score0")
             self.check_ace(self.cards()[1], "score2")
+            self.check_ace(self.cards()[0], "score0")
+
+    def top_up(self):
+        """Replenish funds from anonymous donor"""
+        if self.get_balance < 1:
+            self._balance = 10000
+        print(
+            f"\t{self.name}, you have been gifted $10000 from an Anonymous"
+            " donor!"
+        )
 
     def place_bet(self):
         """Place a players wager"""
-        if self.get_balance < 1:
-            self._balance = 10000
         wage = int(input(f"\tPlayer {self.name}. How much do you wager? "))
         tries = 3
-        while wage > self.get_balance and wage < 0 and tries > 0:
-            print("\tInvalid wager entered, try again.")
-            wage = int(input(f"\tPlayer {self.name}. How much do you wager? "))
+        while (wage > self.get_balance or wage < 0) and tries > 0:
+            print(
+                "\tInvalid wager entered, try again.\n",
+                f"\tCurrent balance: ${self.get_balance}")
+
+            wage = int(input(
+                f"\t{self.name}. How much do you wager? ")
+                )
             tries -= 1
         return wage if tries > 0 else 0
 
@@ -180,34 +209,36 @@ class Player:
     def __str__(self):
         """Convert the Player to a printable string."""
         return (
-            f"\n\tHi, my name is {self._name} ({self._id})\n"
+            f"\n\tHi, my name is {self._name} ({self.identifier})\n"
             f"\tBalance of {self.get_balance}\n"
         )
 
     def __repr__(self):
         """Python representation."""
         return (
-            f"\tPlayer(name={self._name})\n"
-            f"\tScore   = {self._score}):\n"
-            f"\tBalance = {self.get_balance}\n"
-            f"\tSplit   = {self._split}"
+            f"\n\tPlayer:"
+            f"\t  Name    = {self.name}\n"
+            f"\t  UserID  = {self.identifier}\n"
+            f"\t  Score   = {self.score}\n"
+            f"\t  Balance = {self.get_balance}"
         )
 
 
 class ComputerPlayer(Player):
     """AI player class"""
 
-    def __init__(self, name):
+    def __init__(self, name, identifier):
         """Initialize an AI player"""
-        super().__init__(name)
+        super().__init__(name, identifier)
 
-    # def place_bet(self):
-    #     print(f"\n\tPlayer {self.name}. How much do you wager? ", end="")
-    #     wage = random.randrange(0, self.get_balance * 0.2)
-    #     print(wage)
-    #     time.sleep(0.5)
-    #     self._balance -= wage
-    #     return wage
+    def place_bet(self):
+        """AI random bet"""
+        wage = 400
+        print(
+            f"\n\tPlayer {self.name}. How much do you wager? {wage}\n"
+        )
+        time.sleep(0.5)
+        return wage
 
     def hit_or_stand(self):
         """Hit or stay methed"""
@@ -229,12 +260,13 @@ class Dealer(Player):
 
     def __init__(self, name, n_decks=8, min_cut=60, max_cut=80):
         """Initialize an AI dealer"""
-        super().__init__(name)
+        super().__init__(name, identifier=random.randint(100,1000))
         self._hide_second = True
         self._balance = 10000000000000000000
         self._deck = cards.Deck()
         self._shoe = None
-        self._cut_card_position = self.create_playing_deck(n_decks, min_cut, max_cut)
+        self._cut_card_position = \
+            self.create_playing_deck(n_decks, min_cut, max_cut)
 
     @property
     def score(self):
@@ -286,7 +318,8 @@ class Dealer(Player):
         if self.score < 17:
             print(f"\t{self.name} hits\n")
             return True
-        print(f"\t{self.name} will stand \n")
+        if self.score < 22:
+            print(f"\t{self.name} will stand \n")
         return False
 
     def __str__(self):
@@ -303,3 +336,15 @@ class Dealer(Player):
             f"{'?' if self.hidden else self._score}"
             f"): Balance -> {self.get_balance}"
         )
+
+def to_file(pickle_file, players):
+        """Write the list players to the file pickle_file."""
+        with open(pickle_file, 'wb') as file_handle:
+            pickle.dump(players, file_handle, pickle.HIGHEST_PROTOCOL)
+
+
+def from_file(pickle_file):
+    """Read the contents of pickle_file, decode it, and return it as players."""
+    with open(pickle_file, 'rb') as file_handle:
+        players = pickle.load(file_handle)
+    return players
